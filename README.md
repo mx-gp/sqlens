@@ -7,8 +7,6 @@ SQLens is a transparent TCP proxy that intercepts and analyzes SQL queries in re
 ### Dashboard Overview
 ![SQLens Dashboard](assets/dashboard.png)
 
-### Real-time Analysis
-[Watch the Demo Recording](assets/demo.mov)
 
 ## Features
 
