@@ -11,10 +11,11 @@ import (
 )
 
 type Server struct {
-	listenAddr string
-	targetAddr string
-	pipeline   *analyzer.Pipeline
-	store      EventStore
+	listenAddr      string
+	targetAddr      string
+	pipeline        *analyzer.Pipeline
+	store           EventStore
+	redactSensitive bool
 }
 
 // EventStore represents an interface to save and retrieve query events
@@ -22,12 +23,13 @@ type EventStore interface {
 	Save(event analyzer.QueryEvent)
 }
 
-func NewServer(listen, target string, p *analyzer.Pipeline, s EventStore) *Server {
+func NewServer(listen, target string, p *analyzer.Pipeline, s EventStore, redact bool) *Server {
 	return &Server{
-		listenAddr: listen,
-		targetAddr: target,
-		pipeline:   p,
-		store:      s,
+		listenAddr:      listen,
+		targetAddr:      target,
+		pipeline:        p,
+		store:           s,
+		redactSensitive: redact,
 	}
 }
 
@@ -152,7 +154,15 @@ func (s *Server) handleConnection(ctx context.Context, clientConn net.Conn) {
 						Timestamp:    time.Now(),
 						Latency:      l,
 					}
-					s.pipeline.Process(context.Background(), event)
+					
+					// Reassign event to the one that's been through the pipeline
+					event = s.pipeline.Process(context.Background(), event)
+					
+					// If redaction is enabled, mask the raw SQL
+					if s.redactSensitive {
+						event.RawQuery = event.Fingerprint
+					}
+					
 					s.store.Save(event)
 				}(query, latency)
 			} else {

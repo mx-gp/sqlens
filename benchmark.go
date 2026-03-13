@@ -18,10 +18,10 @@ func main() {
 	}
 	defer db.Close()
 
-	fmt.Println("🚀 Starting Realistic SQLens Benchmark...")
+	fmt.Println("Starting Realistic SQLens Benchmark...")
 
 	// 1. Setup Table and Seed Data
-	fmt.Println("\n--- 🛠️ Setup: Creating 'users' table ---")
+	fmt.Println("\n--- Setup: Creating 'users' table ---")
 	_, err = db.Exec(`
 		DROP TABLE IF EXISTS users;
 		CREATE TABLE users (
@@ -47,7 +47,7 @@ func main() {
 
 	// 2. Realistic N+1 Simulation
 	// Scenario: Fetching user IDs, then fetching full details for each one individually
-	fmt.Println("\n--- 🕵️ Scenario: N+1 Detection (Fetching user details one by one) ---")
+	fmt.Println("\n--- Scenario: N+1 Detection (Fetching user details one by one) ---")
 	rows, err := db.Query("SELECT id FROM users LIMIT 10")
 	if err != nil {
 		log.Fatal(err)
@@ -75,7 +75,7 @@ func main() {
 	}
 
 	// 3. Slow Query Simulation
-	fmt.Println("\n--- 🐢 Scenario: Slow Query Detection (Complex search) ---")
+	fmt.Println("\n--- Scenario: Slow Query Detection (Complex search) ---")
 	start := time.Now()
 	var count int
 	// Using pg_sleep to force a slow query report in SQLens
@@ -86,12 +86,22 @@ func main() {
 	fmt.Printf("Slow query finished (latency: %v)\n", time.Since(start))
 
 	// 4. Batch Updates
-	fmt.Println("\n--- ⚡ Scenario: Batch Updates ---")
+	fmt.Println("\n--- Scenario: Batch Updates ---")
 	for i := 0; i < 50; i++ {
 		_, _ = db.Exec("UPDATE users SET created_at = NOW() WHERE id = $1", (i%20)+1)
 	}
-	fmt.Println("Finished 50 quick updates.")
 
-	fmt.Println("\n✅ Benchmark Complete!")
+	// 5. Performance Guardrails Test
+	fmt.Println("\n--- Scenario: Performance Guardrails ---")
+	fmt.Println("Triggering 'SELECT *' warning...")
+	_, _ = db.Exec("SELECT * FROM users")
+	
+	fmt.Println("Triggering 'Missing WHERE' warning...")
+	_, _ = db.Exec("UPDATE users SET name = 'Ghost'")
+
+	fmt.Println("Triggering 'Missing LIMIT' warning...")
+	_, _ = db.Exec("SELECT name FROM users")
+
+	fmt.Println("\nBenchmark Complete!")
 	fmt.Println("Check the SQLens Dashboard (http://localhost:8080) for N+1 alerts and latency maps.")
 }

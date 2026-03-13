@@ -28,10 +28,11 @@ func main() {
 			time.Duration(cfg.N1WindowSecs)*time.Second,
 			cfg.N1Threshold,
 		),
+		analyzer.NewGuardrailAnalyzer(), // New Feature: Real-time SQL Guardrails
 	)
 
 	// Initialize TCP Proxy
-	proxyServer := proxy.NewServer(cfg.ListenAddr, cfg.TargetAddr, pipeline, memStore)
+	proxyServer := proxy.NewServer(cfg.ListenAddr, cfg.TargetAddr, pipeline, memStore, cfg.RedactSensitive)
 
 	// Initialize Web Dashboard
 	webServer := web.NewServer(":8080", memStore)
