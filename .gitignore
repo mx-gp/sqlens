@@ -1,0 +1,4 @@
+bin/
+sqlens
+.DS_Store
+*.log
