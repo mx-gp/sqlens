@@ -24,7 +24,9 @@ jobs:
       run: go mod tidy
 
     - name: Run Tests
-      run: go test -v ./...
+      run: CGO_ENABLED=0 go test -v ./...
 
     - name: Build Binary
-      run: go build -v -o bin/sqlens ./cmd/sqlens
+      run: |
+        mkdir -p bin
+        CGO_ENABLED=0 go build -v -o bin/sqlens ./cmd/sqlens
