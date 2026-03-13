@@ -1,4 +1,4 @@
-# SQLens 🔍
+# SQLens 
 
 SQLens is a transparent TCP proxy that intercepts and analyzes SQL queries in real-time. It helps detect **N+1 query patterns**, **slow queries**, and provides a live performance dashboard—**with zero code changes to your application.**
 
@@ -46,4 +46,4 @@ SQLens can be configured via environment variables:
 - `SQLENS_N1_THRESHOLD`: Number of repeated queries to trigger alert (default `5`)
 
 ---
-Built with ❤️ for SQL performance observability.
+Built for SQL performance observability.
