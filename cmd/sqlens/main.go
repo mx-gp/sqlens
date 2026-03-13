@@ -31,7 +31,7 @@ func main() {
 	)
 
 	// Initialize TCP Proxy
-	proxyServer := proxy.NewServer(cfg.ListenAddr, cfg.TargetAddr, pipeline, memStore)
+	proxyServer := proxy.NewServer(cfg.ListenAddr, cfg.TargetAddr, pipeline, memStore, cfg.RedactSensitive)
 
 	// Initialize Web Dashboard
 	webServer := web.NewServer(":8080", memStore)

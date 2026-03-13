@@ -6,21 +6,31 @@ import (
 )
 
 type Config struct {
-	ListenAddr   string
-	TargetAddr   string
-	SlowQueryMs  int
-	N1WindowSecs int
-	N1Threshold  int
+	ListenAddr      string
+	TargetAddr      string
+	SlowQueryMs     int
+	N1WindowSecs    int
+	N1Threshold     int
+	RedactSensitive bool
 }
 
 func LoadConfig() Config {
 	return Config{
-		ListenAddr:   getEnv("SQLENS_LISTEN_ADDR", ":5433"),
-		TargetAddr:   getEnv("SQLENS_TARGET_ADDR", "localhost:5432"),
-		SlowQueryMs:  getEnvAsInt("SQLENS_SLOW_QUERY_MS", 100),
-		N1WindowSecs: getEnvAsInt("SQLENS_N1_WINDOW_SECS", 10),
-		N1Threshold:  getEnvAsInt("SQLENS_N1_THRESHOLD", 5),
+		ListenAddr:      getEnv("SQLENS_LISTEN_ADDR", ":5433"),
+		TargetAddr:      getEnv("SQLENS_TARGET_ADDR", "localhost:5432"),
+		SlowQueryMs:     getEnvAsInt("SQLENS_SLOW_QUERY_MS", 100),
+		N1WindowSecs:    getEnvAsInt("SQLENS_N1_WINDOW_SECS", 10),
+		N1Threshold:     getEnvAsInt("SQLENS_N1_THRESHOLD", 5),
+		RedactSensitive: getEnvAsBool("SQLENS_REDACT_SENSITIVE", false),
 	}
+}
+
+func getEnvAsBool(key string, fallback bool) bool {
+	strValue := getEnv(key, "")
+	if value, err := strconv.ParseBool(strValue); err == nil {
+		return value
+	}
+	return fallback
 }
 
 func getEnv(key, fallback string) string {
