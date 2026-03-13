@@ -90,7 +90,17 @@ func main() {
 	for i := 0; i < 50; i++ {
 		_, _ = db.Exec("UPDATE users SET created_at = NOW() WHERE id = $1", (i%20)+1)
 	}
-	fmt.Println("Finished 50 quick updates.")
+
+	// 5. Performance Guardrails Test
+	fmt.Println("\n--- 🛡️ Scenario: Performance Guardrails ---")
+	fmt.Println("Triggering 'SELECT *' warning...")
+	_, _ = db.Exec("SELECT * FROM users")
+	
+	fmt.Println("Triggering 'Missing WHERE' warning...")
+	_, _ = db.Exec("UPDATE users SET name = 'Ghost'")
+
+	fmt.Println("Triggering 'Missing LIMIT' warning...")
+	_, _ = db.Exec("SELECT name FROM users")
 
 	fmt.Println("\n✅ Benchmark Complete!")
 	fmt.Println("Check the SQLens Dashboard (http://localhost:8080) for N+1 alerts and latency maps.")

@@ -28,6 +28,7 @@ func main() {
 			time.Duration(cfg.N1WindowSecs)*time.Second,
 			cfg.N1Threshold,
 		),
+		analyzer.NewGuardrailAnalyzer(), // New Feature: Real-time SQL Guardrails
 	)
 
 	// Initialize TCP Proxy

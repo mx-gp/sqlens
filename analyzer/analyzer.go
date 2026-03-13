@@ -12,6 +12,7 @@ type QueryEvent struct {
 	Timestamp    time.Time
 	Fingerprint  string
 	N1Flag       bool
+	Violations   []string // New: Performance/Safety guardrail warnings
 }
 
 type AnalysisResult struct {

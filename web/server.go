@@ -54,6 +54,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
                 '<span class="latency">' + (q.Latency / 1000000) + 'ms</span><br>' +
                 '<code>' + q.RawQuery + '</code>' +
                 (q.N1Flag ? '<br><strong style="color:#f44336">N+1 Detected!</strong>' : '') +
+                (q.Violations ? q.Violations.map(v => '<br><span style="color:#ffeb3b">' + v + '</span>').join('') : '') +
                 '</div>'
             ).join('');
         }
