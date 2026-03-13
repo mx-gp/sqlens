@@ -4,9 +4,8 @@
 
 We take the security of SQLens seriously. If you believe you have found a security vulnerability, please report it to us by following these steps:
 
-1. **Do not open a GitHub issue.** 
-2. Email your report to: `security@example.com` (Placeholder)
-3. Include as much detail as possible: steps to reproduce, impact, and a proof of concept if available.
+1. open a GitHub issue.
+2. Include as much detail as possible: steps to reproduce, impact, and a proof of concept if available.
 
 We will acknowledge your report within 48 hours and keep you updated on our progress.
 
