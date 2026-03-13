@@ -6,6 +6,8 @@ SQLens is a transparent TCP proxy that intercepts and analyzes SQL queries in re
 
 - **Transparent Proxy:** Just point your app to SQLens instead of your DB.
 - **N+1 Detection:** Automatically flags inefficient ORM patterns.
+- **Performance Guardrails:** Real-time detection of SQL anti-patterns (e.g., SELECT *, missing WHERE).
+- **Data Privacy:** Optional PII redaction mode to mask sensitive query values.
 - **Slow Query Tracking:** Real-time latency measurement and visualization.
 - **Live Dashboard:** Web-based interface to see what's happening under the hood.
 
@@ -44,6 +46,7 @@ SQLens can be configured via environment variables:
 - `SQLENS_LISTEN_ADDR`: Proxy listen address (default `:5433`)
 - `SQLENS_TARGET_ADDR`: Target database address (default `localhost:5432`)
 - `SQLENS_N1_THRESHOLD`: Number of repeated queries to trigger alert (default `5`)
+- `SQLENS_REDACT_SENSITIVE`: Enable to mask sensitive data in logs/dashboard (default `false`)
 
 ---
 Built for SQL performance observability.
