@@ -31,16 +31,16 @@ func NewPipeline(analyzers ...Analyzer) *Pipeline {
 	return &Pipeline{analyzers: analyzers}
 }
 
-func (p *Pipeline) Process(ctx context.Context, event QueryEvent) {
+func (p *Pipeline) Process(ctx context.Context, event QueryEvent) QueryEvent {
 	currentEvent := event
 	for _, a := range p.analyzers {
 		result, err := a.Analyze(ctx, currentEvent)
 		if err != nil {
-			// In a real app we'd log this, but we continue processing
 			continue
 		}
 		if result != nil {
 			currentEvent = result.Event
 		}
 	}
+	return currentEvent
 }

@@ -154,9 +154,11 @@ func (s *Server) handleConnection(ctx context.Context, clientConn net.Conn) {
 						Timestamp:    time.Now(),
 						Latency:      l,
 					}
-					s.pipeline.Process(context.Background(), event)
 					
-					// If redaction is enabled, we use the fingerprint instead of raw SQL
+					// Reassign event to the one that's been through the pipeline
+					event = s.pipeline.Process(context.Background(), event)
+					
+					// If redaction is enabled, mask the raw SQL
 					if s.redactSensitive {
 						event.RawQuery = event.Fingerprint
 					}

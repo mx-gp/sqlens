@@ -39,24 +39,30 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
     <title>SQLens Dashboard</title>
     <style>
         body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 20px; }
-        .query { background: #2d2d2d; margin-bottom: 10px; padding: 10px; border-radius: 4px; }
-        .n1 { border-left: 4px solid #f44336; }
+        .query { background: #2d2d2d; margin-bottom: 10px; padding: 10px; border-radius: 4px; border-left: 4px solid transparent; }
+        .n1 { border-left-color: #f44336; }
+        .violation { border-left-color: #ffeb3b; }
         .latency { color: #4caf50; }
+        .violation-text { color: #ffeb3b; font-weight: bold; }
     </style>
     <script>
         async function fetchQueries() {
             const res = await fetch('/api/queries');
             const queries = await res.json();
             const container = document.getElementById('queries');
-            container.innerHTML = queries.map(q => 
-                '<div class="query ' + (q.N1Flag ? 'n1' : '') + '">' +
+            container.innerHTML = queries.map(q => {
+                let classes = 'query';
+                if (q.N1Flag) classes += ' n1';
+                if (q.Violations && q.Violations.length > 0) classes += ' violation';
+                
+                return '<div class="' + classes + '">' +
                 '<strong>[' + new Date(q.Timestamp).toLocaleTimeString() + ']</strong> ' +
-                '<span class="latency">' + (q.Latency / 1000000) + 'ms</span><br>' +
+                '<span class="latency">' + (q.Latency / 1000000).toFixed(2) + 'ms</span><br>' +
                 '<code>' + q.RawQuery + '</code>' +
                 (q.N1Flag ? '<br><strong style="color:#f44336">N+1 Detected!</strong>' : '') +
-                (q.Violations ? q.Violations.map(v => '<br><span style="color:#ffeb3b">' + v + '</span>').join('') : '') +
-                '</div>'
-            ).join('');
+                (q.Violations ? q.Violations.map(v => '<br><span class="violation-text">' + v + '</span>').join('') : '') +
+                '</div>';
+            }).join('');
         }
         setInterval(fetchQueries, 1000);
         window.onload = fetchQueries;
