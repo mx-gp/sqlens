@@ -2,6 +2,14 @@
 
 SQLens is a transparent TCP proxy that intercepts and analyzes SQL queries in real-time. It helps detect **N+1 query patterns**, **slow queries**, and provides a live performance dashboard—**with zero code changes to your application.**
 
+## Demo
+
+### Dashboard Overview
+![SQLens Dashboard](assets/dashboard.png)
+
+### Real-time Analysis
+[Watch the Demo Recording](assets/demo.mov)
+
 ## Features
 
 - **Transparent Proxy:** Just point your app to SQLens instead of your DB.
