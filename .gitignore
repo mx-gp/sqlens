@@ -1,4 +1,4 @@
 bin/
-sqlens
+/sqlens
 .DS_Store
 *.log
