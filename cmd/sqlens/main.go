@@ -12,11 +12,20 @@ import (
 	"github.com/sqlens/sqlens/config"
 	"github.com/sqlens/sqlens/proxy"
 	"github.com/sqlens/sqlens/store"
+	"github.com/sqlens/sqlens/telemetry"
 	"github.com/sqlens/sqlens/web"
 )
 
 func main() {
 	cfg := config.LoadConfig()
+
+	// Initialize Telemetry
+	tp, err := telemetry.InitTracer()
+	if err != nil {
+		slog.Error("Failed to initialize tracer", "err", err)
+		os.Exit(1)
+	}
+	defer telemetry.Shutdown(context.Background(), tp)
 
 	// Initialize Storage
 	memStore := store.NewMemoryStore()
