@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sqlens/sqlens/store"
 )
 
@@ -25,6 +26,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/", s.handleIndex)
 	mux.HandleFunc("/api/queries", s.handleQueries)
 	mux.HandleFunc("/api/n1", s.handleN1)
+	mux.Handle("/metrics", promhttp.Handler())
 
 	return http.ListenAndServe(s.addr, mux)
 }

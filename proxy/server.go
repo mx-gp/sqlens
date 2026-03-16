@@ -8,6 +8,10 @@ import (
 	"time"
 
 	"github.com/sqlens/sqlens/analyzer"
+	"github.com/sqlens/sqlens/metrics"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Server struct {
@@ -16,6 +20,7 @@ type Server struct {
 	pipeline        *analyzer.Pipeline
 	store           EventStore
 	redactSensitive bool
+	tracer          trace.Tracer
 }
 
 // EventStore represents an interface to save and retrieve query events
@@ -30,6 +35,7 @@ func NewServer(listen, target string, p *analyzer.Pipeline, s EventStore, redact
 		pipeline:        p,
 		store:           s,
 		redactSensitive: redact,
+		tracer:          otel.Tracer("sqlens-proxy"),
 	}
 }
 
@@ -84,6 +90,8 @@ func (s *Server) handleConnection(ctx context.Context, clientConn net.Conn) {
 
 	var lastQueryStart time.Time
 	var lastQueryStr string
+	var lastQueryCtx context.Context
+	var lastQuerySpan trace.Span
 	var mu sync.Mutex
 
 	var wg sync.WaitGroup
@@ -107,6 +115,9 @@ func (s *Server) handleConnection(ctx context.Context, clientConn net.Conn) {
 			// Sniff PostgreSQL 'Q' (Simple Query)
 			if n > 5 && buf[0] == 'Q' {
 				mu.Lock()
+				if lastQuerySpan != nil {
+					lastQuerySpan.End()
+				}
 				lastQueryStart = time.Now()
 				// Basic safety: limit query string size to avoid huge allocations
 				end := n - 1
@@ -114,6 +125,13 @@ func (s *Server) handleConnection(ctx context.Context, clientConn net.Conn) {
 					end = 2048
 				}
 				lastQueryStr = string(buf[5:end])
+				
+				// Start OpenTelemetry span
+				qCtx, span := s.tracer.Start(ctx, "sql_query", 
+					trace.WithAttributes(attribute.String("sql.query", lastQueryStr)))
+				lastQueryCtx = qCtx
+				lastQuerySpan = span
+				
 				mu.Unlock()
 			}
 
@@ -143,10 +161,14 @@ func (s *Server) handleConnection(ctx context.Context, clientConn net.Conn) {
 			if !lastQueryStart.IsZero() {
 				latency := time.Since(lastQueryStart)
 				query := lastQueryStr
+				qCtx := lastQueryCtx
+				qSpan := lastQuerySpan
 				lastQueryStart = time.Time{}
+				lastQueryCtx = nil
+				lastQuerySpan = nil
 				mu.Unlock()
 
-				go func(q string, l time.Duration) {
+				go func(q string, l time.Duration, ctx context.Context, span trace.Span) {
 					defer func() { recover() }() // Async processing safety
 					event := analyzer.QueryEvent{
 						ConnectionID: connID,
@@ -156,7 +178,20 @@ func (s *Server) handleConnection(ctx context.Context, clientConn net.Conn) {
 					}
 					
 					// Reassign event to the one that's been through the pipeline
-					event = s.pipeline.Process(context.Background(), event)
+					event = s.pipeline.Process(ctx, event)
+
+					// Record Prometheus metrics
+					metrics.RecordEvent(event.N1Flag, event.Violations, l.Seconds(), event.Fingerprint)
+
+					// Update and End Span
+					if span != nil {
+						span.SetAttributes(
+							attribute.String("sql.fingerprint", event.Fingerprint),
+							attribute.Bool("sqlens.n1_flag", event.N1Flag),
+							attribute.StringSlice("sqlens.violations", event.Violations),
+						)
+						span.End()
+					}
 					
 					// If redaction is enabled, mask the raw SQL
 					if s.redactSensitive {
@@ -164,7 +199,7 @@ func (s *Server) handleConnection(ctx context.Context, clientConn net.Conn) {
 					}
 					
 					s.store.Save(event)
-				}(query, latency)
+				}(query, latency, qCtx, qSpan)
 			} else {
 				mu.Unlock()
 			}
